@@ -26,9 +26,26 @@ const db = mysql.createConnection(
 // query the database to test the connection
 // rows is the database query response 
 // key component that allows SQL commands to be written in Node application
-// db.query(`SELECT * FROM candidates`, (err, rows) => {
-//     console.log(rows);
-// });
+
+// Get all candidates
+app.get('/api/candidates', (req, res) => {
+    const sql = `SELECT * FROM candidates`;
+    db.query(sql, (err, rows) => {
+        if (err) {
+            // instead of logging error, send status code (500) and place the error message within a JSON object
+            res.status(500).json({ error: err.message });
+        }
+        // if no error then error is null and response will be sent back
+        res.json({
+            message: 'success',
+            data: rows
+        });
+    });
+});
+
+
+
+
 
 // // GET a single candidate
 // db.query(`SELECT * FROM candidates WHERE id = 1`, (err, row) => {
