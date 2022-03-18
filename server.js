@@ -43,17 +43,23 @@ app.get('/api/candidates', (req, res) => {
     });
 });
 
-
-
-
-
 // // GET a single candidate
-// db.query(`SELECT * FROM candidates WHERE id = 1`, (err, row) => {
-//     if (err) {
-//         console.log(err);
-//     }
-//     console.log(row);
-// });
+app.get('/api/candidate/:id', (req, res) => {
+    const sql = `SELECT * FROM candidates WHERE id = ?`;
+    const params = [req.params.id];
+
+    db.query(sql, params, (err, row) => {
+        if (err) {
+            // notify client that their request wasnt accepted and try a different request
+            res.status(400).json({ error: err.message });
+        }
+        // send row back to client in a JSON object
+        res.json({
+            message: 'success',
+            data: row
+        });
+    });
+});
 
 // Delete a candidate
 // statement has "?" to denote a placeholder
