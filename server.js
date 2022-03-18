@@ -26,9 +26,39 @@ const db = mysql.createConnection(
 // query the database to test the connection
 // rows is the database query response 
 // key component that allows SQL commands to be written in Node application
-db.query(`SELECT * FROM candidates`, (err, rows) => {
-    console.log(rows);
-});
+// db.query(`SELECT * FROM candidates`, (err, rows) => {
+//     console.log(rows);
+// });
+
+// // GET a single candidate
+// db.query(`SELECT * FROM candidates WHERE id = 1`, (err, row) => {
+//     if (err) {
+//         console.log(err);
+//     }
+//     console.log(row);
+// });
+
+// Delete a candidate
+// statement has "?" to denote a placeholder
+// db.query(`DELETE FROM candidates WHERE id = ?`, 1, (err, result) => {
+//     if (err) {
+//         console.log(err);
+//     }
+//     console.log(result);
+// });
+
+// Create a candidate
+// const sql = `INSERT INTO candidates (id, first_name, last_name, industry_connected)
+//                 VALUES (?,?,?,?)`;
+//                 // ^ since table has 4 columns we need 4 placeholders for the values
+// const params = [1, 'Ronald', 'Firbank', 1];
+
+// db.query(sql, params, (err, result) => {
+//     if (err) {
+//         console.log(err);
+//     }
+//     console.log(result);
+// });
 
 // handle user requests that arent supported by the app catchall route
 // Default response for any other request (Not Found)
