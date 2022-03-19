@@ -1,6 +1,7 @@
+const express = require('express');
 // import mysql2 package
 const mysql = require('mysql2');
-const express = require('express');
+const inputCheck = require('./utils/inputCheck');
 
 // port designation and app designation
 const PORT = process.env.PORT || 3001;
@@ -86,6 +87,50 @@ app.delete('/api/candidate/:id', (req, res) => {
 });
 
 
+// Create a candidate
+
+// using post() to insert candidate into the candidates table
+app.post('/api/candidate', ({ body }, res) => {
+    const errors = inputCheck(body, 'first_name', 'last_name', 'industry_connected');
+    if (errors) {
+        res.status(400).json({ error: errors });
+        return;
+    }
+
+
+    // add databse call with autogenerate id through mysql 
+    const sql = `INSERT INTO candidates (first_name, last_name, industry_connected)
+        VALUES (?,?,?)`;
+    const params = [body.first_name, body.last_name, body.industry_connected];
+
+    db.query(sql, params, (err, result) => {
+        if (err) {
+            res.status(400).json({ error: err.message });
+        }
+        res.json({
+            message: 'success',
+            data: body
+        });
+    });
+});
+
+// handle user requests that arent supported by the app catchall route
+// Default response for any other request (Not Found)
+app.use((req, res) => {
+    res.status(404).end();
+});
+
+// function to start the express server on port 3001
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+
+
+
+
+
+
+
 
 // Create a candidate
 // const sql = `INSERT INTO candidates (id, first_name, last_name, industry_connected)
@@ -99,14 +144,3 @@ app.delete('/api/candidate/:id', (req, res) => {
 //     }
 //     console.log(result);
 // });
-
-// handle user requests that arent supported by the app catchall route
-// Default response for any other request (Not Found)
-app.use((req, res) => {
-    res.status(404).end();
-});
-
-// function to start the express server on port 3001
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
