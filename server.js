@@ -28,9 +28,14 @@ const db = mysql.createConnection(
 // rows is the database query response 
 // key component that allows SQL commands to be written in Node application
 
-// Get all candidates
+// Get all candidates and party affiliation
 app.get('/api/candidates', (req, res) => {
-    const sql = `SELECT * FROM candidates`;
+    const sql = `SELECT candidates.*, parties.name
+                AS party_name
+                FROM candidates
+                LEFT JOIN parties
+                ON candidates.party_id = parties.id`;
+
     db.query(sql, (err, rows) => {
         if (err) {
             // instead of logging error, send status code (500) and place the error message within a JSON object
@@ -44,9 +49,15 @@ app.get('/api/candidates', (req, res) => {
     });
 });
 
-// // GET a single candidate
+// GET a single candidate and party affiliation
 app.get('/api/candidate/:id', (req, res) => {
-    const sql = `SELECT * FROM candidates WHERE id = ?`;
+    const sql = `SELECT candidates.*, parties.name
+                AS party_name
+                FROM candidates
+                LEFT JOIN parties
+                ON candidates.party_id = parties.id
+                WHERE candidates.id = ?`;
+
     const params = [req.params.id];
 
     db.query(sql, params, (err, row) => {
@@ -58,6 +69,32 @@ app.get('/api/candidate/:id', (req, res) => {
         res.json({
             message: 'success',
             data: row
+        });
+    });
+});
+
+// Create a candidate
+// using post() to insert candidate into the candidates table
+app.post('/api/candidate', ({ body }, res) => {
+    const errors = inputCheck(body, 'first_name', 'last_name', 'industry_connected');
+    if (errors) {
+        res.status(400).json({ error: errors });
+        return;
+    }
+
+
+    // add databse call with autogenerate id through mysql 
+    const sql = `INSERT INTO candidates (first_name, last_name, industry_connected)
+        VALUES (?,?,?)`;
+    const params = [body.first_name, body.last_name, body.industry_connected];
+
+    db.query(sql, params, (err, result) => {
+        if (err) {
+            res.status(400).json({ error: err.message });
+        }
+        res.json({
+            message: 'success',
+            data: body
         });
     });
 });
@@ -86,33 +123,61 @@ app.delete('/api/candidate/:id', (req, res) => {
     });
 });
 
-
-// Create a candidate
-
-// using post() to insert candidate into the candidates table
-app.post('/api/candidate', ({ body }, res) => {
-    const errors = inputCheck(body, 'first_name', 'last_name', 'industry_connected');
-    if (errors) {
-        res.status(400).json({ error: errors });
-        return;
-    }
-
-
-    // add databse call with autogenerate id through mysql 
-    const sql = `INSERT INTO candidates (first_name, last_name, industry_connected)
-        VALUES (?,?,?)`;
-    const params = [body.first_name, body.last_name, body.industry_connected];
-
-    db.query(sql, params, (err, result) => {
+// Get all parties
+app.get('/api/parties', (req, res) => {
+    const sql =`SELECT * FROM parties`;
+    db.query(sql, (err, rows) => {
         if (err) {
-            res.status(400).json({ error: err.message });
+            res.status(500).json({ eror: err.message });
+            return;
         }
         res.json({
-            message: 'success',
-            data: body
+            message: 'succss',
+            data: rows
         });
     });
 });
+
+// Get a single party
+app.get('/api/party/:id', (req, res) => {
+    const sql = `SELECT * FROM parties WHERE id = ?`;
+    const params = [req.params.id];
+    db.query(sql, params, (err, row) => {
+        if (err) {
+            res.status(400).json({ error: err.message });
+            return;
+        }
+        res.json({
+            message: 'success',
+            data: row
+        });
+    });
+});
+
+// DELETE a party
+app.delete('/api/party/:id', (req, res) => {
+    const sql = `DELETE FROM parties WHERE id = ?`;
+    const params = [req.params.id];
+    db.query(sql, params, (err, result) => {
+        if (err) {
+            res.status(400).json({ error: res.message });
+            // checks if anything was deleted
+        } else if (!result.affectedRows) {
+            res.json({
+                message: 'Party not found'
+            });
+            // if deleted successfully
+        } else {
+            res.json({
+                message: 'deleted',
+                changes: result.affectedRows,
+                id: req.params.id
+            });
+        }
+    });
+});
+
+
 
 // handle user requests that arent supported by the app catchall route
 // Default response for any other request (Not Found)
