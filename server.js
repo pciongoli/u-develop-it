@@ -99,6 +99,39 @@ app.post('/api/candidate', ({ body }, res) => {
     });
 });
 
+
+// Update a candidate's party
+app.put('/api/candidate/:id', (req, res) => {
+  // Candidate is allowed to not have party affiliation
+  const errors = inputCheck(req.body, 'party_id');
+  if (errors) {
+    res.status(400).json({ error: errors });
+    return;
+  }
+
+  const sql = `UPDATE candidates SET party_id = ? 
+               WHERE id = ?`;
+  const params = [req.body.party_id, req.params.id];
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      // check if a record was found
+    } else if (!result.affectedRows) {
+      res.json({
+        message: 'Candidate not found'
+      });
+    } else {
+      res.json({
+        message: 'success',
+        data: req.body,
+        changes: result.affectedRows
+      });
+    }
+  });
+});
+
+
+
 // Delete a candidate
 // statement has "?" to denote a placeholder
 // Delete a candidate
@@ -125,7 +158,7 @@ app.delete('/api/candidate/:id', (req, res) => {
 
 // Get all parties
 app.get('/api/parties', (req, res) => {
-    const sql =`SELECT * FROM parties`;
+    const sql = `SELECT * FROM parties`;
     db.query(sql, (err, rows) => {
         if (err) {
             res.status(500).json({ eror: err.message });
